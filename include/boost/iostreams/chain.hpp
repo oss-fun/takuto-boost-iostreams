@@ -20,6 +20,7 @@
 #include <stdexcept>                            // logic_error, out_of_range.
 #include <boost/checked_delete.hpp>
 #include <boost/config.hpp>                     // BOOST_MSVC, template friends,
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/detail/workaround.hpp>          // BOOST_NESTED_TEMPLATE 
 #include <boost/core/typeinfo.hpp>
 #include <boost/iostreams/constants.hpp>
@@ -318,8 +319,8 @@ private:
             { }
         ~chain_impl()
             {
-                try { close(); } catch (...) { }
-                try { reset(); } catch (...) { }
+                BOOST_TRY { close(); } BOOST_CATCH (...) { } BOOST_CATCH_END
+                BOOST_TRY { reset(); } BOOST_CATCH (...) { } BOOST_CATCH_END
             }
         void close()
             {
@@ -331,20 +332,20 @@ private:
                         set_next(links_.back(), &null);
                     }
                     links_.front()->BOOST_IOSTREAMS_PUBSYNC();
-                    try {
+                    BOOST_TRY {
                         boost::iostreams::detail::execute_foreach(
-                            links_.rbegin(), links_.rend(), 
+                            links_.rbegin(), links_.rend(),
                             closer(BOOST_IOS::in)
                         );
-                    } catch (...) {
-                        try {
+                    } BOOST_CATCH (...) {
+                        BOOST_TRY {
                             boost::iostreams::detail::execute_foreach(
-                                links_.begin(), links_.end(), 
+                                links_.begin(), links_.end(),
                                 closer(BOOST_IOS::out)
                             );
-                        } catch (...) { }
-                        throw;
-                    }
+                        } BOOST_CATCH (...) { } BOOST_CATCH_END
+                        BOOST_RETHROW
+                    } BOOST_CATCH_END
                     boost::iostreams::detail::execute_foreach(
                         links_.begin(), links_.end(), 
                         closer(BOOST_IOS::out)

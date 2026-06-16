@@ -16,8 +16,9 @@
 # pragma once
 #endif
 
-#include <boost/config.hpp> // STATIC_CONSTANT, STDC_NAMESPACE, 
+#include <boost/config.hpp> // STATIC_CONSTANT, STDC_NAMESPACE,
                             // DINKUMWARE_STDLIB, __STL_CONFIG_H.
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <algorithm>                      // min.
 #include <boost/assert.hpp>
 #include <cstdio>                         // EOF.
@@ -250,7 +251,7 @@ public:
     template<typename Sink>
     void close(Sink& snk, BOOST_IOS::openmode m)
     {
-        try {
+        BOOST_TRY {
             if (m == BOOST_IOS::out && !(flags_ & f_header_done))
                 this->write(snk, 0, 0);
 
@@ -265,10 +266,10 @@ public:
                     write_long(this->total_in(), snk);
                 }
             }
-        } catch(...) {
+        } BOOST_CATCH(...) {
             close_impl();
-            throw;
-        }
+            BOOST_RETHROW
+        } BOOST_CATCH_END
         close_impl();
     }
 private:
@@ -429,8 +430,8 @@ public:
                 if (header_.done())
                     state_ = s_body;
             } else if (state_ == s_body) {
-                try {
-                    std::streamsize amt = 
+                BOOST_TRY {
+                    std::streamsize amt =
                         base_type::write(snk, s + result, n - result);
                     result += amt;
                     if (!this->eof()) {
@@ -438,9 +439,13 @@ public:
                     } else {
                         state_ = s_footer;
                     }
-                } catch (const zlib_error& e) {
+                }
+#ifndef BOOST_NO_EXCEPTIONS
+                catch (const zlib_error& e) {
                     boost::throw_exception(gzip_error(e));
                 }
+#endif
+                BOOST_CATCH_END
             } else { // state_ == s_footer
                 if (footer_.done()) {
                     if (footer_.crc() != this->crc())
@@ -480,8 +485,8 @@ public:
                 if (header_.done())
                     state_ = s_body;
             } else if (state_ == s_body) {
-                try {
-                    std::streamsize amt = 
+                BOOST_TRY {
+                    std::streamsize amt =
                         base_type::read(peek, s + result, n - result);
                     if (amt != -1) {
                         result += amt;
@@ -491,9 +496,13 @@ public:
                         peek.putback(this->unconsumed_input());
                         state_ = s_footer;
                     }
-                } catch (const zlib_error& e) {
+                }
+#ifndef BOOST_NO_EXCEPTIONS
+                catch (const zlib_error& e) {
                     boost::throw_exception(gzip_error(e));
                 }
+#endif
+                BOOST_CATCH_END
             } else { // state_ == s_footer
                 int c = boost::iostreams::get(peek);
                 if (traits_type::is_eof(c)) {
@@ -531,12 +540,16 @@ public:
     template<typename Source>
     void close(Source& src, BOOST_IOS::openmode m)
     {
-        try {
+        BOOST_TRY {
             base_type::close(src, m);
-        } catch (const zlib_error& e) {
+        }
+#ifndef BOOST_NO_EXCEPTIONS
+        catch (const zlib_error& e) {
             state_ = s_start;
             boost::throw_exception(gzip_error(e));
         }
+#endif
+        BOOST_CATCH_END
         if (m == BOOST_IOS::out) {
             if (state_ == s_start || state_ == s_header)
                 boost::throw_exception(gzip_error(gzip::bad_header));

@@ -14,6 +14,7 @@
 
 #include <algorithm>                          // copy, min.
 #include <boost/assert.hpp>
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <iterator>                           // back_inserter
 #include <vector>
 #include <boost/iostreams/constants.hpp>      // default_device_buffer_size 
@@ -86,17 +87,17 @@ public:
         if ((state_ & f_read) != 0 && which == BOOST_IOS::in)
             close_impl();
         if ((state_ & f_write) != 0 && which == BOOST_IOS::out) {
-            try {
+            BOOST_TRY {
                 vector_type filtered;
                 do_filter(data_, filtered);
-                do_write( 
+                do_write(
                     sink, &filtered[0],
                     static_cast<std::streamsize>(filtered.size())
                 );
-            } catch (...) {
+            } BOOST_CATCH (...) {
                 close_impl();
-                throw;
-            }
+                BOOST_RETHROW
+            } BOOST_CATCH_END
             close_impl();
         }
     }

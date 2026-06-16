@@ -17,6 +17,7 @@
 #include <cassert>
 #include <exception>
 #include <boost/config.hpp>                      // Member template friends.
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/detail/workaround.hpp>
 #include <boost/core/typeinfo.hpp>
 #include <boost/iostreams/constants.hpp>
@@ -308,20 +309,20 @@ indirect_streambuf<T, Tr, Alloc, Mode>::overflow(int_type c)
 template<typename T, typename Tr, typename Alloc, typename Mode>
 int indirect_streambuf<T, Tr, Alloc, Mode>::sync()
 {
-    try { // sync() is no-throw.
+    BOOST_TRY { // sync() is no-throw.
         sync_impl();
         obj().flush(next_);
         return 0;
-    } catch (...) { return -1; }
+    } BOOST_CATCH (...) { return -1; } BOOST_CATCH_END
 }
 
 template<typename T, typename Tr, typename Alloc, typename Mode>
 bool indirect_streambuf<T, Tr, Alloc, Mode>::strict_sync()
 {
-    try { // sync() is no-throw.
+    BOOST_TRY { // sync() is no-throw.
         sync_impl();
         return obj().flush(next_);
-    } catch (...) { return false; }
+    } BOOST_CATCH (...) { return false; } BOOST_CATCH_END
 }
 
 template<typename T, typename Tr, typename Alloc, typename Mode>

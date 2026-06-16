@@ -33,6 +33,7 @@
 #endif
 
 #include <boost/config.hpp>
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/detail/workaround.hpp>
 #include <boost/iostreams/detail/config/limits.hpp>   // MAX_EXECUTE_ARITY
 #include <boost/preprocessor/arithmetic/dec.hpp>
@@ -92,17 +93,17 @@ execute_all(Op op)
    execute_all(Op op, BOOST_PP_ENUM_BINARY_PARAMS(n, C, c)) \
    { \
        typename execute_traits<Op>::result_type r; \
-       try { \
+       BOOST_TRY { \
            r = boost::iostreams::detail::execute_all( \
                    op BOOST_PP_COMMA_IF(BOOST_PP_DEC(n)) \
                    BOOST_PP_ENUM_PARAMS(BOOST_PP_DEC(n), c) \
                ); \
-       } catch (...) { \
-           try { \
+       } BOOST_CATCH (...) { \
+           BOOST_TRY { \
                BOOST_PP_CAT(c, BOOST_PP_DEC(n))(); \
-           } catch (...) { } \
-           throw; \
-       } \
+           } BOOST_CATCH (...) { } BOOST_CATCH_END \
+           BOOST_RETHROW \
+       } BOOST_CATCH_END \
        BOOST_PP_CAT(c, BOOST_PP_DEC(n))(); \
        return r; \
    } \
@@ -117,15 +118,15 @@ Op execute_foreach(InIt first, InIt last, Op op)
 {
     if (first == last)
         return op;
-    try {
+    BOOST_TRY {
         op(*first);
-    } catch (...) {
-        try {
+    } BOOST_CATCH (...) {
+        BOOST_TRY {
             ++first;
             boost::iostreams::detail::execute_foreach(first, last, op);
-        } catch (...) { }
-        throw;
-    }
+        } BOOST_CATCH (...) { } BOOST_CATCH_END
+        BOOST_RETHROW
+    } BOOST_CATCH_END
     ++first;
     return boost::iostreams::detail::execute_foreach(first, last, op);
 }

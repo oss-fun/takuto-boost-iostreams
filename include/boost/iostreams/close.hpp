@@ -13,6 +13,7 @@
 #endif
 
 #include <boost/config.hpp>  // DEDUCED_TYPENAME, MSVC.
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/detail/workaround.hpp>
 #include <boost/iostreams/categories.hpp>
 #include <boost/iostreams/flush.hpp>
@@ -47,29 +48,29 @@ namespace detail {
 
 template<typename T>
 void close_all(T& t)
-{ 
-    try {
+{
+    BOOST_TRY {
         boost::iostreams::close(t, BOOST_IOS::in);
-    } catch (...) {
-        try {
+    } BOOST_CATCH (...) {
+        BOOST_TRY {
             boost::iostreams::close(t, BOOST_IOS::out);
-        } catch (...) { }
-        throw;
-    }
+        } BOOST_CATCH (...) { } BOOST_CATCH_END
+        BOOST_RETHROW
+    } BOOST_CATCH_END
     boost::iostreams::close(t, BOOST_IOS::out);
 }
 
 template<typename T, typename Sink>
 void close_all(T& t, Sink& snk)
-{ 
-    try {
+{
+    BOOST_TRY {
         boost::iostreams::close(t, snk, BOOST_IOS::in);
-    } catch (...) {
-        try {
+    } BOOST_CATCH (...) {
+        BOOST_TRY {
             boost::iostreams::close(t, snk, BOOST_IOS::out);
-        } catch (...) { }
-        throw;
-    }
+        } BOOST_CATCH (...) { } BOOST_CATCH_END
+        BOOST_RETHROW
+    } BOOST_CATCH_END
     boost::iostreams::close(t, snk, BOOST_IOS::out);
 }
 

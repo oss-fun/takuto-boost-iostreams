@@ -24,7 +24,8 @@
 #include <algorithm>                       // max.
 #include <cstring>                         // memcpy.
 #include <exception>
-#include <boost/config.hpp>                // DEDUCED_TYPENAME, 
+#include <boost/config.hpp>                // DEDUCED_TYPENAME,
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/iostreams/char_traits.hpp>
 #include <boost/iostreams/constants.hpp>   // default_filter_buffer_size.
 #include <boost/iostreams/detail/adapter/concept_adapter.hpp>
@@ -148,9 +149,9 @@ struct code_converter_impl {
 
     ~code_converter_impl()
     { 
-        try { 
-            if (flags_ & f_open) close(); 
-        } catch (...) { /* */ } 
+        BOOST_TRY {
+            if (flags_ & f_open) close();
+        } BOOST_CATCH (...) { /* */ } BOOST_CATCH_END
     }
 
     template <class T>

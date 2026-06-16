@@ -44,6 +44,7 @@
 #include <boost/assert.hpp>
 #include <memory>                               // allocator.
 #include <boost/config.hpp>                     // BOOST_DEDUCED_TYPENAME.
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/iostreams/char_traits.hpp>
 #include <boost/iostreams/constants.hpp>        // buffer size.
 #include <boost/iostreams/detail/buffer.hpp>
@@ -165,7 +166,7 @@ public:
                 begin_write();
 
             // Repeatedly invoke filter() with no input.
-            try {
+            BOOST_TRY {
                 buffer_type&     buf = pimpl_->buf_;
                 char_type        dummy;
                 const char_type* end = &dummy;
@@ -176,10 +177,10 @@ public:
                                                  buf.eptr(), true );
                     flush(snk);
                 }
-            } catch (...) {
-                try { close_impl(); } catch (...) { }
-                throw;
-            }
+            } BOOST_CATCH (...) {
+                BOOST_TRY { close_impl(); } BOOST_CATCH (...) { } BOOST_CATCH_END
+                BOOST_RETHROW
+            } BOOST_CATCH_END
             close_impl();
         } else {
             close_impl();

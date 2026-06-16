@@ -17,6 +17,7 @@
 #include <memory>                                  // allocator.
 #include <string>
 #include <boost/config.hpp>                        // BOOST_STATIC_CONSTANT.
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/iostreams/categories.hpp>
 #include <boost/iostreams/checked_operations.hpp>
 #include <boost/iostreams/detail/ios.hpp>          // openmode, streamsize.
@@ -124,15 +125,15 @@ public:
             close_impl();
 
         if ((flags_ & f_write) && which == BOOST_IOS::out) {
-            try {
+            BOOST_TRY {
                 if (!cur_line_.empty())
                     write_line(snk);
-            } catch (...) {
-                try {
+            } BOOST_CATCH (...) {
+                BOOST_TRY {
                     close_impl();
-                } catch (...) { }
-                throw;
-            }
+                } BOOST_CATCH (...) { } BOOST_CATCH_END
+                BOOST_RETHROW
+            } BOOST_CATCH_END
             close_impl();
         }
     }

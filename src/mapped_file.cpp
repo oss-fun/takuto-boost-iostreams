@@ -18,6 +18,7 @@
 #include <boost/iostreams/detail/system_failure.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/numeric/conversion/cast.hpp>
 
 #ifdef BOOST_IOSTREAMS_WINDOWS
@@ -81,8 +82,8 @@ private:
 
 mapped_file_impl::mapped_file_impl() { clear(false); }
 
-mapped_file_impl::~mapped_file_impl() 
-{ try { close(); } catch (...) { } }
+mapped_file_impl::~mapped_file_impl()
+{ BOOST_TRY { close(); } BOOST_CATCH (...) { } BOOST_CATCH_END }
 
 void mapped_file_impl::open(param_type p)
 {
@@ -345,16 +346,16 @@ void mapped_file_impl::try_map_file(param_type p)
 
 void mapped_file_impl::map_file(param_type& p)
 {
-    try {
+    BOOST_TRY {
         try_map_file(p);
-    } catch (const std::exception&) {
+    } BOOST_CATCH (const std::exception&) {
         if (p.hint) {
             p.hint = 0;
             try_map_file(p);
         } else {
-            throw;
+            BOOST_RETHROW
         }
-    }
+    } BOOST_CATCH_END
 }
 
 bool mapped_file_impl::unmap_file()

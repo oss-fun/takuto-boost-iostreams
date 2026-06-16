@@ -14,6 +14,7 @@
 
 #include <memory>            // allocator.
 #include <boost/config.hpp>  // BOOST_DEDUCED_TYPENAME.
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY/BOOST_CATCH (BOOST_NO_EXCEPTIONS aware)
 #include <boost/iostreams/detail/char_traits.hpp>
 #include <boost/iostreams/detail/config/overload_resolution.hpp>
 #include <boost/iostreams/detail/forward.hpp>
@@ -86,10 +87,10 @@ public:
     stream_buffer() { }
     ~stream_buffer()
     { 
-        try { 
-            if (this->is_open() && this->auto_close()) 
-                this->close(); 
-        } catch (...) { } 
+        BOOST_TRY {
+            if (this->is_open() && this->auto_close())
+                this->close();
+        } BOOST_CATCH (...) { } BOOST_CATCH_END
     }
     BOOST_IOSTREAMS_FORWARD( stream_buffer, open_impl, T,
                              BOOST_IOSTREAMS_PUSH_PARAMS,
